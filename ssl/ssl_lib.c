@@ -5397,6 +5397,46 @@ int SSL_client_hello_get0_ext(SSL *s, unsigned int type, const unsigned char **o
     return 0;
 }
 
+int SSL_client_hello_get0_servername(SSL *s, const char **out, size_t *outlen)
+{
+    const unsigned char *p;
+    size_t len, remaining;
+
+    /*
+     * The server_name extension was given too much extensibility when it
+     * was written, so parsing the normal case is a bit complex.
+     */
+    if (!SSL_client_hello_get0_ext(s, TLSEXT_TYPE_server_name, &p,
+                                   &remaining)
+        || remaining <= 2) 
+        return 0;
+
+    /* Extract the length of the supplied list of names. */
+    len = (*(p++) << 8);
+    len += *(p++);
+    if (len + 2 != remaining)
+        return 0;
+    remaining = len;
+
+    /*
+     * The list in practice only has a single element, so we only consider
+     * the first one.
+     */
+    if (remaining <= 3 || *p++ != TLSEXT_NAMETYPE_host_name)
+        return 0;
+    remaining--;
+
+    /* Now we can finally pull out the byte array with the actual hostname. */
+    len = (*(p++) << 8);
+    len += *(p++);
+    if (len + 2 != remaining)
+        return 0;
+
+    *out = (const char *)p;
+    *outlen = len;
+    return 1;
+}
+
 int SSL_free_buffers(SSL *ssl)
 {
     RECORD_LAYER *rl = &ssl->rlayer;

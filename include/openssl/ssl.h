@@ -1837,6 +1837,7 @@ size_t SSL_client_hello_get0_session_id(SSL *s, const unsigned char **out);
 size_t SSL_client_hello_get0_ciphers(SSL *s, const unsigned char **out);
 size_t SSL_client_hello_get0_compression_methods(SSL *s,
                                                  const unsigned char **out);
+int SSL_client_hello_get0_servername(SSL *s, const char **out, size_t *outlen);
 int SSL_client_hello_get1_extensions_present(SSL *s, int **out, size_t *outlen);
 int SSL_client_hello_get0_ext(SSL *s, unsigned int type,
                               const unsigned char **out, size_t *outlen);

@@ -247,7 +247,7 @@ IF[{- !$disabled{tests} -}]
 
   SOURCE[ssl_test]=ssl_test.c ssl_test_ctx.c handshake_helper.c
   INCLUDE[ssl_test]=../include ../apps/include
-  DEPEND[ssl_test]=../libcrypto ../libssl libtestutil.a
+  DEPEND[ssl_test]=../libcrypto ../libssl.a libtestutil.a
 
   SOURCE[cipherlist_test]=cipherlist_test.c
   INCLUDE[cipherlist_test]=../include ../apps/include

@@ -152,41 +152,12 @@ static int select_server_ctx(SSL *s, void *arg, int ignore)
 static int client_hello_select_server_ctx(SSL *s, void *arg, int ignore)
 {
     const char *servername;
-    const unsigned char *p;
-    size_t len, remaining;
+    size_t len;
     HANDSHAKE_EX_DATA *ex_data =
         (HANDSHAKE_EX_DATA*)(SSL_get_ex_data(s, ex_data_idx));
 
-    /*
-     * The server_name extension was given too much extensibility when it
-     * was written, so parsing the normal case is a bit complex.
-     */
-    if (!SSL_client_hello_get0_ext(s, TLSEXT_TYPE_server_name, &p,
-                                   &remaining) ||
-        remaining <= 2)
+    if (!SSL_client_hello_get0_servername(s, &servername, &len))
         return 0;
-    /* Extract the length of the supplied list of names. */
-    len = (*(p++) << 8);
-    len += *(p++);
-    if (len + 2 != remaining)
-        return 0;
-    remaining = len;
-    /*
-     * The list in practice only has a single element, so we only consider
-     * the first one.
-     */
-    if (remaining == 0 || *p++ != TLSEXT_NAMETYPE_host_name)
-        return 0;
-    remaining--;
-    /* Now we can finally pull out the byte array with the actual hostname. */
-    if (remaining <= 2)
-        return 0;
-    len = (*(p++) << 8);
-    len += *(p++);
-    if (len + 2 > remaining)
-        return 0;
-    remaining = len;
-    servername = (const char *)p;
 
     if (len == strlen("server2") && strncmp(servername, "server2", len) == 0) {
         SSL_CTX *new_ctx = arg;
