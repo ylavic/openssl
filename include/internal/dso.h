@@ -151,6 +151,12 @@ int DSO_pathbyaddr(void *addr, char *path, int sz);
 DSO *DSO_dsobyaddr(void *addr, int flags);
 
 /*
+ * Pin a loaded DSO containing 'addr' in its address space, returning 1 if
+ * it succeeded or 0 if it failed. No ERR_ is set on the stack upon failure.
+ */
+int DSO_pinbyaddr(void *addr);
+
+/*
  * This function should be used with caution! It looks up symbols in *all*
  * loaded modules and if module gets unloaded by somebody else attempt to
  * dereference the pointer is doomed to have fatal consequences. Primary
