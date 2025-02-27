@@ -17,6 +17,7 @@
 #include "sslerr.h"
 #include "internal/thread_once.h"
 #include "internal/rio_notifier.h"    /* for ossl_wsa_cleanup() */
+#include "internal/dso.h"
 
 static int stopped;
 
@@ -35,6 +36,14 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_ssl_base)
 #endif
     ssl_sort_cipher_list();
     OSSL_TRACE(INIT, "ossl_init_ssl_base: SSL_add_ssl_module()\n");
+    /* Keep libssl loaded, ignoring the error if it's not a DSO */
+    {
+        int pinned = DSO_pinbyaddr((void *)&stopped);
+        OSSL_TRACE1(INIT,
+                    "ossl_init_ssl_base: obtained DSO reference? %s\n",
+                    pinned ? "Yes." : "No!");
+        (void)pinned;
+    }
     ssl_base_inited = 1;
     return 1;
 }

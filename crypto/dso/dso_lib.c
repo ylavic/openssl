@@ -317,6 +317,46 @@ DSO *DSO_dsobyaddr(void *addr, int flags)
     return ret;
 }
 
+int DSO_pinbyaddr(void *addr)
+{
+#if !defined(OPENSSL_USE_NODELETE)\
+    && !defined(OPENSSL_NO_PINSHARED)
+    {
+# if defined(DSO_WIN32) && !defined(_WIN32_WCE)
+        HMODULE handle = NULL;
+        BOOL ok;
+
+        /*
+         * We don't use the DSO route for WIN32 because there is a better
+         * way
+         */
+        ok = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS
+                               | GET_MODULE_HANDLE_EX_FLAG_PIN,
+                               addr, &handle);
+        if (!ok)
+            return 0;
+# elif !defined(DSO_NONE)
+        /*
+         * Deliberately leak a reference to the handler. This will force the
+         * library/code containing the handler to remain loaded until we run the
+         * atexit handler. If -znodelete has been used then this is
+         * unnecessary.
+         */
+        DSO *dso;
+
+        ERR_set_mark();
+        dso = DSO_dsobyaddr(addr, DSO_FLAG_NO_UNLOAD_ON_FREE);
+        DSO_free(dso);
+        ERR_pop_to_mark();
+        if (!dso)
+            return 0;
+# endif
+    }
+#endif
+
+    return 1;
+}
+
 void *DSO_global_lookup(const char *name)
 {
     DSO_METHOD *meth = DSO_METHOD_openssl();
